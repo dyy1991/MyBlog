@@ -3,7 +3,7 @@ import PostCard from '@/components/PostCard';
 import { posts } from '@/lib/db';
 
 export default async function Home() {
-  const allPosts = posts.getAll() as any[];
+  const allPosts = await posts.getAll();
 
   // 获取特色文章（第一个）
   const featuredPost = allPosts[0] || null;

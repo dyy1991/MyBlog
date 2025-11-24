@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: '缺少 postId 参数' }, { status: 400 });
     }
 
-    const commentsList = comments.getByPostId(postId);
+    const commentsList = await comments.getByPostId(postId);
     return NextResponse.json(commentsList);
   } catch (error) {
     return NextResponse.json({ error: '获取评论失败' }, { status: 500 });
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '缺少必要字段' }, { status: 400 });
     }
 
-    const id = comments.create({
+    const id = await comments.create({
       post_id,
       author,
       email,

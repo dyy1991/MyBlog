@@ -1,85 +1,9 @@
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
-import path from 'path';
-import fs from 'fs';
 
-const dataDir = path.join(process.cwd(), 'data');
-const postsFile = path.join(dataDir, 'posts.json');
-const commentsFile = path.join(dataDir, 'comments.json');
-const filesFile = path.join(dataDir, 'files.json');
-const aiConversationsFile = path.join(dataDir, 'ai_conversations.json');
-const categoriesFile = path.join(dataDir, 'categories.json');
+type Maybe<T> = T | null;
 
-// 确保数据目录存在
-if (!fs.existsSync(dataDir)) {
-  fs.mkdirSync(dataDir, { recursive: true });
-}
-
-// 读取 JSON 文件
-function readJsonFile<T>(filePath: string, defaultValue: T[] = []): T[] {
-  try {
-    if (fs.existsSync(filePath)) {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      return JSON.parse(content);
-    }
-  } catch (error) {
-    console.error(`读取文件 ${filePath} 失败:`, error);
-  }
-  return defaultValue;
-}
-
-// 写入 JSON 文件
-function writeJsonFile<T>(filePath: string, data: T[]): void {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (error) {
-    console.error(`写入文件 ${filePath} 失败:`, error);
-    throw error;
-  }
-}
-
-// 初始化数据库
-export function initDatabase() {
-  // 初始化文件（如果不存在）
-  if (!fs.existsSync(postsFile)) {
-    writeJsonFile(postsFile, []);
-  }
-  if (!fs.existsSync(commentsFile)) {
-    writeJsonFile(commentsFile, []);
-  }
-  if (!fs.existsSync(filesFile)) {
-    writeJsonFile(filesFile, []);
-  }
-  if (!fs.existsSync(aiConversationsFile)) {
-    writeJsonFile(aiConversationsFile, []);
-  }
-  if (!fs.existsSync(categoriesFile)) {
-    writeJsonFile(categoriesFile, [
-      {
-        id: uuidv4(),
-        name: 'Music',
-        slug: 'music',
-        description: '音乐与创作灵感',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: uuidv4(),
-        name: 'Lifestyle',
-        slug: 'lifestyle',
-        description: '生活方式与灵感',
-        created_at: new Date().toISOString(),
-      },
-      {
-        id: uuidv4(),
-        name: 'Management',
-        slug: 'management',
-        description: '效率与管理方法',
-        created_at: new Date().toISOString(),
-      },
-    ]);
-  }
-}
-
-interface Post {
+export interface Post {
   id: string;
   title: string;
   content: string;
@@ -87,12 +11,12 @@ interface Post {
   category?: string;
   author?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
   featured_image?: string;
-  is_published: number;
+  is_published?: boolean;
 }
 
-interface Comment {
+export interface Comment {
   id: string;
   post_id: string;
   author: string;
@@ -102,7 +26,7 @@ interface Comment {
   parent_id?: string;
 }
 
-interface File {
+export interface FileMeta {
   id: string;
   filename: string;
   original_name: string;
@@ -113,7 +37,7 @@ interface File {
   post_id?: string;
 }
 
-interface AIConversation {
+export interface AIConversation {
   id: string;
   question: string;
   answer: string;
@@ -121,12 +45,33 @@ interface AIConversation {
   post_id?: string;
 }
 
-interface Category {
+export interface Category {
   id: string;
   name: string;
   slug: string;
   description?: string;
   created_at: string;
+}
+
+let supabaseClient: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (supabaseClient) {
+    return supabaseClient;
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error('Supabase 环境变量未配置，请检查 NEXT_PUBLIC_SUPABASE_URL 与 SUPABASE_SERVICE_ROLE_KEY');
+  }
+
+  supabaseClient = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: { persistSession: false },
+  });
+
+  return supabaseClient;
 }
 
 const slugify = (text: string) =>
@@ -136,235 +81,319 @@ const slugify = (text: string) =>
     .trim()
     .replace(/[\s\W-]+/g, '-');
 
-// 文章相关操作
+async function ensureUniqueSlug(slug: string) {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.from('categories').select('id').eq('slug', slug).maybeSingle();
+
+  if (error && error.code !== 'PGRST116') {
+    throw error;
+  }
+
+  if (data) {
+    throw new Error('分类 slug 已存在');
+  }
+}
+
 export const posts = {
-  getAll: (): Post[] => {
-    const allPosts = readJsonFile<Post>(postsFile);
-    return allPosts
-      .filter(post => post.is_published === 1)
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  async getAll(): Promise<Post[]> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('is_published', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('获取文章列表失败:', error);
+      throw error;
+    }
+
+    return data ?? [];
   },
-  
-  getById: (id: string): Post | undefined => {
-    const allPosts = readJsonFile<Post>(postsFile);
-    return allPosts.find(post => post.id === id);
+
+  async getById(id: string): Promise<Maybe<Post>> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from('posts').select('*').eq('id', id).maybeSingle();
+
+    if (error) {
+      console.error('获取文章失败:', error);
+      throw error;
+    }
+
+    return data ?? null;
   },
-  
-  create: (data: {
+
+  async create(data: {
     title: string;
     content: string;
     excerpt?: string;
     category?: string;
     author?: string;
     featured_image?: string;
-  }): string => {
-    const id = uuidv4();
-    const now = new Date().toISOString();
-    const newPost: Post = {
-      id,
+  }): Promise<string> {
+    const supabase = getSupabase();
+    const payload = {
+      id: uuidv4(),
       title: data.title,
       content: data.content,
       excerpt: data.excerpt || '',
       category: data.category || '',
       author: data.author || 'John Doe',
-      created_at: now,
-      updated_at: now,
       featured_image: data.featured_image || '',
-      is_published: 1,
+      is_published: true,
     };
-    
-    const allPosts = readJsonFile<Post>(postsFile);
-    allPosts.push(newPost);
-    writeJsonFile(postsFile, allPosts);
-    return id;
+
+    const { data: inserted, error } = await supabase.from('posts').insert(payload).select('id').single();
+
+    if (error) {
+      console.error('创建文章失败:', error);
+      throw error;
+    }
+
+    return inserted?.id as string;
   },
-  
-  update: (id: string, data: {
-    title?: string;
-    content?: string;
-    excerpt?: string;
-    category?: string;
-    featured_image?: string;
-  }): void => {
-    const allPosts = readJsonFile<Post>(postsFile);
-    const index = allPosts.findIndex(post => post.id === id);
-    
-    if (index !== -1) {
-      if (data.title !== undefined) allPosts[index].title = data.title;
-      if (data.content !== undefined) allPosts[index].content = data.content;
-      if (data.excerpt !== undefined) allPosts[index].excerpt = data.excerpt;
-      if (data.category !== undefined) allPosts[index].category = data.category;
-      if (data.featured_image !== undefined) allPosts[index].featured_image = data.featured_image;
-      allPosts[index].updated_at = new Date().toISOString();
-      writeJsonFile(postsFile, allPosts);
+
+  async update(
+    id: string,
+    data: {
+      title?: string;
+      content?: string;
+      excerpt?: string;
+      category?: string;
+      featured_image?: string;
+    },
+  ): Promise<void> {
+    const supabase = getSupabase();
+    const updates: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (data.title !== undefined) updates.title = data.title;
+    if (data.content !== undefined) updates.content = data.content;
+    if (data.excerpt !== undefined) updates.excerpt = data.excerpt;
+    if (data.category !== undefined) updates.category = data.category;
+    if (data.featured_image !== undefined) updates.featured_image = data.featured_image;
+
+    const { error } = await supabase.from('posts').update(updates).eq('id', id);
+
+    if (error) {
+      console.error('更新文章失败:', error);
+      throw error;
     }
   },
-  
-  delete: (id: string): void => {
-    const allPosts = readJsonFile<Post>(postsFile);
-    const filtered = allPosts.filter(post => post.id !== id);
-    writeJsonFile(postsFile, filtered);
+
+  async delete(id: string): Promise<void> {
+    const supabase = getSupabase();
+    const { error } = await supabase.from('posts').delete().eq('id', id);
+
+    if (error) {
+      console.error('删除文章失败:', error);
+      throw error;
+    }
   },
 };
 
-// 评论相关操作
 export const comments = {
-  getByPostId: (postId: string): Comment[] => {
-    const allComments = readJsonFile<Comment>(commentsFile);
-    return allComments
-      .filter(comment => comment.post_id === postId)
-      .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+  async getByPostId(postId: string): Promise<Comment[]> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('comments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('获取评论失败:', error);
+      throw error;
+    }
+
+    return data ?? [];
   },
-  
-  create: (data: {
-    post_id: string;
-    author: string;
-    email?: string;
-    content: string;
-    parent_id?: string;
-  }): string => {
-    const id = uuidv4();
-    const newComment: Comment = {
-      id,
+
+  async create(data: { post_id: string; author: string; email?: string; content: string; parent_id?: string }) {
+    const supabase = getSupabase();
+    const payload = {
+      id: uuidv4(),
       post_id: data.post_id,
       author: data.author,
       email: data.email || '',
       content: data.content,
-      created_at: new Date().toISOString(),
-      parent_id: data.parent_id || undefined,
+      parent_id: data.parent_id || null,
     };
-    
-    const allComments = readJsonFile<Comment>(commentsFile);
-    allComments.push(newComment);
-    writeJsonFile(commentsFile, allComments);
-    return id;
+
+    const { data: inserted, error } = await supabase.from('comments').insert(payload).select('id').single();
+
+    if (error) {
+      console.error('创建评论失败:', error);
+      throw error;
+    }
+
+    return inserted?.id as string;
   },
-  
-  delete: (id: string): void => {
-    const allComments = readJsonFile<Comment>(commentsFile);
-    const filtered = allComments.filter(comment => comment.id !== id);
-    writeJsonFile(commentsFile, filtered);
+
+  async delete(id: string) {
+    const supabase = getSupabase();
+    const { error } = await supabase.from('comments').delete().eq('id', id);
+    if (error) {
+      console.error('删除评论失败:', error);
+      throw error;
+    }
   },
 };
 
-// 文件相关操作
 export const files = {
-  create: (data: {
+  async create(data: {
     filename: string;
     original_name: string;
     file_type: string;
     file_size: number;
     file_path: string;
     post_id?: string;
-  }): string => {
-    const id = uuidv4();
-    const newFile: File = {
-      id,
+  }): Promise<string> {
+    const supabase = getSupabase();
+    const payload = {
+      id: uuidv4(),
       filename: data.filename,
       original_name: data.original_name,
       file_type: data.file_type,
       file_size: data.file_size,
       file_path: data.file_path,
-      uploaded_at: new Date().toISOString(),
-      post_id: data.post_id || undefined,
+      post_id: data.post_id || null,
     };
-    
-    const allFiles = readJsonFile<File>(filesFile);
-    allFiles.push(newFile);
-    writeJsonFile(filesFile, allFiles);
-    return id;
-  },
-  
-  getByPostId: (postId: string): File[] => {
-    const allFiles = readJsonFile<File>(filesFile);
-    return allFiles.filter(file => file.post_id === postId);
-  },
-  
-  getAll: (): File[] => {
-    const allFiles = readJsonFile<File>(filesFile);
-    return allFiles.sort((a, b) => new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime());
-  },
-  
-  delete: (id: string): void => {
-    const allFiles = readJsonFile<File>(filesFile);
-    const file = allFiles.find(f => f.id === id);
-    
-    if (file) {
-      const filePath = path.join(process.cwd(), 'public', file.file_path);
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-      const filtered = allFiles.filter(f => f.id !== id);
-      writeJsonFile(filesFile, filtered);
+
+    const { data: inserted, error } = await supabase.from('files').insert(payload).select('id').single();
+
+    if (error) {
+      console.error('保存文件记录失败:', error);
+      throw error;
     }
+
+    return inserted?.id as string;
+  },
+
+  async getByPostId(postId: string): Promise<FileMeta[]> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from('files').select('*').eq('post_id', postId);
+    if (error) {
+      console.error('获取文件失败:', error);
+      throw error;
+    }
+    return data ?? [];
+  },
+
+  async getAll(): Promise<FileMeta[]> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from('files').select('*').order('uploaded_at', { ascending: false });
+    if (error) {
+      console.error('获取文件列表失败:', error);
+      throw error;
+    }
+    return data ?? [];
+  },
+
+  async delete(id: string): Promise<FileMeta | null> {
+    const supabase = getSupabase();
+    const { data: fileRecord, error: fetchError } = await supabase
+      .from('files')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError) {
+      console.error('查询文件失败:', fetchError);
+      throw fetchError;
+    }
+
+    const { error } = await supabase.from('files').delete().eq('id', id);
+    if (error) {
+      console.error('删除文件记录失败:', error);
+      throw error;
+    }
+
+    return fileRecord ?? null;
   },
 };
 
-// AI对话相关操作
 export const aiConversations = {
-  create: (data: {
-    question: string;
-    answer: string;
-    post_id?: string;
-  }): string => {
-    const id = uuidv4();
-    const newConversation: AIConversation = {
-      id,
+  async create(data: { question: string; answer: string; post_id?: string }) {
+    const supabase = getSupabase();
+    const payload = {
+      id: uuidv4(),
       question: data.question,
       answer: data.answer,
-      created_at: new Date().toISOString(),
-      post_id: data.post_id || undefined,
+      post_id: data.post_id || null,
     };
-    
-    const allConversations = readJsonFile<AIConversation>(aiConversationsFile);
-    allConversations.push(newConversation);
-    writeJsonFile(aiConversationsFile, allConversations);
-    return id;
+
+    const { data: inserted, error } = await supabase.from('ai_conversations').insert(payload).select('id').single();
+
+    if (error) {
+      console.error('保存 AI 对话失败:', error);
+      throw error;
+    }
+
+    return inserted?.id as string;
   },
-  
-  getRecent: (limit: number = 10): AIConversation[] => {
-    const allConversations = readJsonFile<AIConversation>(aiConversationsFile);
-    return allConversations
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-      .slice(0, limit);
+
+  async getRecent(limit = 10): Promise<AIConversation[]> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('ai_conversations')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) {
+      console.error('获取对话失败:', error);
+      throw error;
+    }
+
+    return data ?? [];
   },
 };
 
-// 分类相关操作
 export const categories = {
-  getAll: (): Category[] => {
-    return readJsonFile<Category>(categoriesFile).sort(
-      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
-    );
-  },
+  async getAll(): Promise<Category[]> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase.from('categories').select('*').order('created_at', { ascending: true });
 
-  create: (data: { name: string; slug?: string; description?: string }): string => {
-    const allCategories = readJsonFile<Category>(categoriesFile);
-
-    const slug = (data.slug || slugify(data.name)).replace(/^-+|-+$/g, '') || slugify(uuidv4());
-    if (allCategories.some(category => category.slug === slug)) {
-      throw new Error('分类 slug 已存在');
+    if (error) {
+      console.error('获取分类失败:', error);
+      throw error;
     }
 
-    const newCategory: Category = {
+    return data ?? [];
+  },
+
+  async create(data: { name: string; slug?: string; description?: string }): Promise<string> {
+    const supabase = getSupabase();
+    const slug = (data.slug || slugify(data.name)).replace(/^-+|-+$/g, '') || slugify(uuidv4());
+
+    await ensureUniqueSlug(slug);
+
+    const payload = {
       id: uuidv4(),
       name: data.name,
       slug,
       description: data.description || '',
-      created_at: new Date().toISOString(),
     };
 
-    allCategories.push(newCategory);
-    writeJsonFile(categoriesFile, allCategories);
-    return newCategory.id;
+    const { data: inserted, error } = await supabase.from('categories').insert(payload).select('id').single();
+
+    if (error) {
+      console.error('创建分类失败:', error);
+      throw error;
+    }
+
+    return inserted?.id as string;
   },
 
-  delete: (id: string): void => {
-    const allCategories = readJsonFile<Category>(categoriesFile);
-    const filtered = allCategories.filter(category => category.id !== id);
-    writeJsonFile(categoriesFile, filtered);
+  async delete(id: string): Promise<void> {
+    const supabase = getSupabase();
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+    if (error) {
+      console.error('删除分类失败:', error);
+      throw error;
+    }
   },
 };
 
-// 初始化数据库
-initDatabase();

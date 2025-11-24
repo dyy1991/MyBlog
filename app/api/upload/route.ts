@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
 
     // 保存文件信息到数据库
     const relativePath = `/uploads/${filename}`;
-    const fileId = files.create({
+    const fileId = await files.create({
       filename,
       original_name: originalName,
       file_type: file.type || ext,

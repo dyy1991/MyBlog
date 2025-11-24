@@ -6,7 +6,7 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const post = posts.getById(params.id);
+    const post = await posts.getById(params.id);
     if (!post) {
       return NextResponse.json({ error: '文章不存在' }, { status: 404 });
     }
@@ -22,7 +22,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    posts.update(params.id, body);
+    await posts.update(params.id, body);
     return NextResponse.json({ message: '文章更新成功' });
   } catch (error) {
     return NextResponse.json({ error: '更新文章失败' }, { status: 500 });
@@ -34,7 +34,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    posts.delete(params.id);
+    await posts.delete(params.id);
     return NextResponse.json({ message: '文章删除成功' });
   } catch (error) {
     return NextResponse.json({ error: '删除文章失败' }, { status: 500 });

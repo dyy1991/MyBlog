@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { comments } from '@/lib/db';
 
 interface Comment {
   id: string;

@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     // 获取文章内容（如果提供了 postId）
     let context = '';
     if (postId) {
-      const post = posts.getById(postId) as any;
+      const post = await posts.getById(postId);
       if (post) {
         context = `文章标题：${post.title}\n文章内容：${post.content.substring(0, 1000)}...`;
       }
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 保存对话历史
-    aiConversations.create({
+    await aiConversations.create({
       question,
       answer,
       post_id: postId || undefined,

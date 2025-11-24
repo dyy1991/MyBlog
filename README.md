@@ -19,7 +19,7 @@
 
 - **前端框架**: Next.js 14 (App Router)
 - **样式**: Tailwind CSS
-- **数据库**: JSON 文件存储（无需编译，跨平台）
+- **数据库**: Supabase Postgres（云端托管，实时 API）
 - **Markdown 渲染**: react-markdown
 - **代码高亮**: react-syntax-highlighter
 - **AI 集成**: OpenAI API
@@ -32,15 +32,18 @@
 npm install
 ```
 
-### 2. 配置环境变量（可选）
+### 2. 配置环境变量
 
-创建 `.env.local` 文件：
+在项目根目录创建 `.env.local`（或在 Vercel 项目中配置环境变量）：
 
 ```env
-OPENAI_API_KEY=your_openai_api_key_here
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+SUPABASE_ANON_KEY=optional_public_anon_key
+OPENAI_API_KEY=your_openai_api_key_here # 可选
 ```
 
-如果不配置 OpenAI API Key，AI 助手会返回模拟回答。
+> 若暂不使用 OpenAI，可留空；Supabase 变量则为必填。
 
 ### 3. 运行开发服务器
 
@@ -133,17 +136,79 @@ blog/
 - 访问 `/contact` 查看联系方式
 - 默认列出邮箱 `787833823@qq.com`、GitHub、微博等链接
 
-## 数据库
+## 数据库（Supabase）
 
-项目使用 JSON 文件存储数据，数据文件会自动创建在 `data/` 目录下。
+项目使用 [Supabase](https://supabase.com/) 托管 PostgreSQL 数据库。请在 Supabase 控制台中创建以下数据表（可在 Table Editor 中手动添加或使用 SQL）：
 
-数据文件：
-- `data/posts.json` - 文章数据
-- `data/comments.json` - 评论数据
-- `data/files.json` - 文件数据
-- `data/ai_conversations.json` - AI 对话历史数据
+### posts
+| 字段 | 类型 | 说明 |
+| --- | --- | --- |
+| id | uuid (PK, default uuid_generate_v4()) | 文章 ID |
+| title | text | 标题 |
+| content | text | 正文 |
+| excerpt | text | 摘要 |
+| category | text | 分类名 |
+| author | text | 作者 |
+| featured_image | text | 配图 URL |
+| is_published | boolean (default true) | 是否发布 |
+| created_at | timestamptz (default now()) | 创建时间 |
+| updated_at | timestamptz | 更新时间 |
 
-**注意**: JSON 文件存储方案无需编译原生模块，适合快速开发和跨平台部署。如需更高性能，可以迁移到其他数据库系统。
+### comments
+| 字段 | 类型 |
+| --- | --- |
+| id (PK) | uuid |
+| post_id (FK → posts.id) | uuid |
+| author | text |
+| email | text |
+| content | text |
+| parent_id | uuid |
+| created_at | timestamptz default now() |
+
+### files
+| 字段 | 类型 |
+| --- | --- |
+| id (PK) | uuid |
+| filename | text |
+| original_name | text |
+| file_type | text |
+| file_size | bigint |
+| file_path | text |
+| post_id | uuid |
+| uploaded_at | timestamptz default now() |
+
+### categories
+| 字段 | 类型 |
+| --- | --- |
+| id (PK) | uuid |
+| name | text |
+| slug | text (unique) |
+| description | text |
+| created_at | timestamptz default now() |
+
+### ai_conversations
+| 字段 | 类型 |
+| --- | --- |
+| id (PK) | uuid |
+| question | text |
+| answer | text |
+| post_id | uuid |
+| created_at | timestamptz default now() |
+
+> 提示：在 Supabase SQL Editor 中执行 `create extension if not exists "uuid-ossp";` 以便使用 `uuid_generate_v4()`。
+
+### 环境变量
+
+在根目录创建 `.env.local` 并填入：
+
+```
+NEXT_PUBLIC_SUPABASE_URL=你的 Supabase 项目 URL
+SUPABASE_SERVICE_ROLE_KEY=你的 service role key（仅在服务端使用）
+SUPABASE_ANON_KEY=可选，匿名 key
+OPENAI_API_KEY=可选，OpenAI key
+```
+
+> Service Role Key 仅会在服务端使用，请勿泄露。部署到 Vercel 时，将上述变量配置到 Project Settings → Environment Variables 中。
 
 ## 注意事项
 

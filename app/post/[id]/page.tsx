@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
 
 export default async function PostPage({ params }: { params: { id: string } }) {
-  const post = posts.getById(params.id) as any;
+  const post = await posts.getById(params.id);
 
   if (!post) {
     notFound();

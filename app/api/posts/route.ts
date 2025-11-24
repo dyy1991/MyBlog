@@ -3,7 +3,7 @@ import { posts } from '@/lib/db';
 
 export async function GET() {
   try {
-    const allPosts = posts.getAll();
+    const allPosts = await posts.getAll();
     return NextResponse.json(allPosts);
   } catch (error) {
     return NextResponse.json({ error: '获取文章失败' }, { status: 500 });
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '标题和内容不能为空' }, { status: 400 });
     }
 
-    const id = posts.create({
+    const id = await posts.create({
       title,
       content,
       excerpt,
