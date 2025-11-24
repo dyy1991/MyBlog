@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import PostEditor from '@/components/PostEditor';
 import FileUploader from '@/components/FileUploader';
 import CategoryManager from '@/components/CategoryManager';
-
+export const dynamic = 'force-dynamic';
 interface Post {
   id: string;
   title: string;

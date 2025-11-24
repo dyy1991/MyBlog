@@ -1,7 +1,7 @@
 import Header from '@/components/Header';
 import PostCard from '@/components/PostCard';
 import { posts } from '@/lib/db';
-
+export const dynamic = 'force-dynamic';
 export default async function Home() {
   const allPosts = await posts.getAll();
 

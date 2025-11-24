@@ -10,7 +10,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import Image from 'next/image';
 import { format } from 'date-fns';
 import { zhCN } from 'date-fns/locale';
-
+export const dynamic = 'force-dynamic';
 export default async function PostPage({ params }: { params: { id: string } }) {
   const post = await posts.getById(params.id);
 

@@ -1,5 +1,5 @@
 import Header from '@/components/Header';
-
+export const dynamic = 'force-dynamic';
 const contactInfo = [
   { label: '邮箱', value: '787833823@qq.com', href: 'mailto:787833823@qq.com' },
   { label: 'GitHub', value: 'github.com/dyy1991', href: 'https://github.com/dyy1991' },

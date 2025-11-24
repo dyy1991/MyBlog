@@ -1,6 +1,6 @@
 import Header from '@/components/Header';
 import ReactMarkdown from 'react-markdown';
-
+export const dynamic = 'force-dynamic';
 const aboutContent = `
 # 关于这个博客
 
