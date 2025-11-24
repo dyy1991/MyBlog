@@ -29,6 +29,8 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [previewMode, setPreviewMode] = useState(false);
+  const [categoryOptions, setCategoryOptions] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   useEffect(() => {
     if (post) {
@@ -40,6 +42,23 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
       setFeaturedImage(post.featured_image || '');
     }
   }, [post]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const res = await fetch('/api/categories');
+        const data = await res.json();
+        setCategoryOptions(data);
+      } catch (error) {
+        console.error('加载分类失败', error);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -159,10 +178,12 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">选择分类</option>
-                <option value="MUSIC">Music</option>
-                <option value="LIFESTYLE">Lifestyle</option>
-                <option value="MANAGEMENT">Management</option>
+                <option value="">{loadingCategories ? '加载中...' : '选择分类'}</option>
+                {categoryOptions.map(option => (
+                  <option key={option.id} value={option.name}>
+                    {option.name}
+                  </option>
+                ))}
               </select>
             </div>
             <div>

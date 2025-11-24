@@ -1,18 +1,59 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+
+type ThemeOption = 'dark' | 'light' | 'neon';
+
+const themeOptions: { id: ThemeOption; label: string; description: string }[] = [
+  { id: 'dark', label: '暗黑', description: '沉浸式深色体验' },
+  { id: 'light', label: '亮色', description: '清爽的浅色背景' },
+  { id: 'neon', label: '霓虹', description: '赛博霓虹夜色' },
+];
 
 export default function Header() {
   const [showCategories, setShowCategories] = useState(false);
   const [showBlog, setShowBlog] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [showStyles, setShowStyles] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [theme, setTheme] = useState<ThemeOption>('dark');
+  const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+
+  useEffect(() => {
+    const storedTheme = typeof window !== 'undefined' ? (localStorage.getItem('philosophy-theme') as ThemeOption | null) : null;
+    applyTheme(storedTheme || 'dark');
+  }, []);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch('/api/categories', { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          setCategories(data);
+        }
+      } catch (error) {
+        console.error('加载分类失败', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  const applyTheme = (nextTheme: ThemeOption) => {
+    setTheme(nextTheme);
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('theme-dark', 'theme-light', 'theme-neon');
+      document.body.classList.add(`theme-${nextTheme}`);
+      localStorage.setItem('philosophy-theme', nextTheme);
+    }
+  };
 
   return (
-    <header className="bg-black text-white">
+    <header className="bg-[var(--header-bg)] text-[var(--header-text)] transition-colors duration-300">
       {/* Top Bar */}
-      <div className="border-b border-gray-800">
+      <div className="border-b border-[var(--header-border)]">
         <div className="max-w-7xl mx-auto px-4 py-2 flex justify-between items-center">
           <div className="flex gap-4">
             <a href="#" className="hover:text-gray-400 transition">
@@ -55,14 +96,14 @@ export default function Header() {
 
       {/* Search Bar */}
       {showSearch && (
-        <div className="border-b border-gray-800 bg-gray-900 p-4">
+        <div className="border-b border-[var(--header-border)] bg-[var(--hero-bg)] p-4 text-[var(--hero-text)]">
           <div className="max-w-7xl mx-auto">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="搜索文章..."
-              className="w-full bg-gray-800 text-white px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-transparent border border-[var(--header-border)] text-[var(--hero-text)] px-4 py-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-gray-400"
             />
           </div>
         </div>
@@ -71,12 +112,12 @@ export default function Header() {
       {/* Logo */}
       <div className="text-center py-8">
         <Link href="/" className="text-4xl font-light tracking-wide">
-          Philosophy.
+          Oceanus Quest
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="bg-gray-900 border-t border-b border-gray-800">
+      <nav className="bg-[var(--hero-bg)] border-t border-b border-[var(--header-border)] text-[var(--hero-text)]">
         <div className="max-w-7xl mx-auto px-4">
           <ul className="flex justify-center items-center gap-8 py-4">
             <li>
@@ -95,10 +136,20 @@ export default function Header() {
                 </svg>
               </button>
               {showCategories && (
-                <div className="absolute top-full left-0 mt-2 bg-gray-800 rounded shadow-lg py-2 min-w-[150px] z-10">
-                  <Link href="/categories/music" className="block px-4 py-2 hover:bg-gray-700">Music</Link>
-                  <Link href="/categories/lifestyle" className="block px-4 py-2 hover:bg-gray-700">Lifestyle</Link>
-                  <Link href="/categories/management" className="block px-4 py-2 hover:bg-gray-700">Management</Link>
+                <div className="absolute top-full left-0 mt-2 bg-[var(--header-bg)] rounded shadow-lg py-2 min-w-[180px] z-10 border border-[var(--header-border)]">
+                  {categories.length === 0 ? (
+                    <span className="block px-4 py-2 text-sm text-gray-400">暂无分类</span>
+                  ) : (
+                    categories.map((category) => (
+                      <Link
+                        key={category.id}
+                        href={`/categories/${category.slug}`}
+                        className="block px-4 py-2 hover:bg-[var(--header-border)] transition"
+                      >
+                        {category.name}
+                      </Link>
+                    ))
+                  )}
                 </div>
               )}
             </li>
@@ -119,10 +170,35 @@ export default function Header() {
                 </div>
               )}
             </li>
-            <li>
-              <Link href="/styles" className="hover:text-gray-400 transition">
+            <li className="relative">
+              <button
+                onClick={() => setShowStyles(!showStyles)}
+                className="flex items-center gap-1 hover:text-gray-400 transition"
+              >
                 Styles
-              </Link>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showStyles && (
+                <div className="absolute top-full left-0 mt-2 bg-[var(--header-bg)] rounded shadow-lg py-2 min-w-[200px] z-10 border border-[var(--header-border)]">
+                  {themeOptions.map((option) => (
+                    <button
+                      key={option.id}
+                      className={`w-full text-left px-4 py-2 hover:bg-[var(--header-border)] transition ${
+                        theme === option.id ? 'text-blue-400' : ''
+                      }`}
+                      onClick={() => {
+                        applyTheme(option.id);
+                        setShowStyles(false);
+                      }}
+                    >
+                      <span className="block font-semibold">{option.label}</span>
+                      <span className="text-xs text-gray-400">{option.description}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </li>
             <li>
               <Link href="/about" className="hover:text-gray-400 transition">

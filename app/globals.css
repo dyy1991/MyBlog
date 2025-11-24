@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --page-bg: #ffffff;
+  --page-text: #0f0f0f;
+  --header-bg: #000000;
+  --header-text: #ffffff;
+  --header-border: #2a2a2a;
+  --hero-bg: #0f0f0f;
+  --hero-text: #f8f8f8;
+  --content-bg: #ffffff;
+  --content-text: #0f0f0f;
+}
+
 * {
   margin: 0;
   padding: 0;
@@ -14,6 +26,45 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--page-bg);
+  color: var(--page-text);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.theme-dark {
+  --page-bg: #050505;
+  --page-text: #f5f5f5;
+  --header-bg: #000000;
+  --header-text: #ffffff;
+  --header-border: #2a2a2a;
+  --hero-bg: #111111;
+  --hero-text: #f5f5f5;
+  --content-bg: #ffffff;
+  --content-text: #111111;
+}
+
+body.theme-light {
+  --page-bg: #f7f7f7;
+  --page-text: #0f0f0f;
+  --header-bg: #ffffff;
+  --header-text: #111111;
+  --header-border: #e5e5e5;
+  --hero-bg: #ffffff;
+  --hero-text: #0f0f0f;
+  --content-bg: #ffffff;
+  --content-text: #0f0f0f;
+}
+
+body.theme-neon {
+  --page-bg: #050914;
+  --page-text: #e0f2ff;
+  --header-bg: #050914;
+  --header-text: #8be9fd;
+  --header-border: #14203b;
+  --hero-bg: #0d1427;
+  --hero-text: #f8f8f8;
+  --content-bg: #0b1020;
+  --content-text: #c0dbff;
 }
 
 /* 自定义滚动条 */

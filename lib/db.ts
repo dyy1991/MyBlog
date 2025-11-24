@@ -7,6 +7,7 @@ const postsFile = path.join(dataDir, 'posts.json');
 const commentsFile = path.join(dataDir, 'comments.json');
 const filesFile = path.join(dataDir, 'files.json');
 const aiConversationsFile = path.join(dataDir, 'ai_conversations.json');
+const categoriesFile = path.join(dataDir, 'categories.json');
 
 // 确保数据目录存在
 if (!fs.existsSync(dataDir)) {
@@ -51,6 +52,31 @@ export function initDatabase() {
   if (!fs.existsSync(aiConversationsFile)) {
     writeJsonFile(aiConversationsFile, []);
   }
+  if (!fs.existsSync(categoriesFile)) {
+    writeJsonFile(categoriesFile, [
+      {
+        id: uuidv4(),
+        name: 'Music',
+        slug: 'music',
+        description: '音乐与创作灵感',
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: uuidv4(),
+        name: 'Lifestyle',
+        slug: 'lifestyle',
+        description: '生活方式与灵感',
+        created_at: new Date().toISOString(),
+      },
+      {
+        id: uuidv4(),
+        name: 'Management',
+        slug: 'management',
+        description: '效率与管理方法',
+        created_at: new Date().toISOString(),
+      },
+    ]);
+  }
 }
 
 interface Post {
@@ -94,6 +120,21 @@ interface AIConversation {
   created_at: string;
   post_id?: string;
 }
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at: string;
+}
+
+const slugify = (text: string) =>
+  text
+    .toString()
+    .toLowerCase()
+    .trim()
+    .replace(/[\s\W-]+/g, '-');
 
 // 文章相关操作
 export const posts = {
@@ -286,6 +327,42 @@ export const aiConversations = {
     return allConversations
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .slice(0, limit);
+  },
+};
+
+// 分类相关操作
+export const categories = {
+  getAll: (): Category[] => {
+    return readJsonFile<Category>(categoriesFile).sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+    );
+  },
+
+  create: (data: { name: string; slug?: string; description?: string }): string => {
+    const allCategories = readJsonFile<Category>(categoriesFile);
+
+    const slug = (data.slug || slugify(data.name)).replace(/^-+|-+$/g, '') || slugify(uuidv4());
+    if (allCategories.some(category => category.slug === slug)) {
+      throw new Error('分类 slug 已存在');
+    }
+
+    const newCategory: Category = {
+      id: uuidv4(),
+      name: data.name,
+      slug,
+      description: data.description || '',
+      created_at: new Date().toISOString(),
+    };
+
+    allCategories.push(newCategory);
+    writeJsonFile(categoriesFile, allCategories);
+    return newCategory.id;
+  },
+
+  delete: (id: string): void => {
+    const allCategories = readJsonFile<Category>(categoriesFile);
+    const filtered = allCategories.filter(category => category.id !== id);
+    writeJsonFile(categoriesFile, filtered);
   },
 };
 
