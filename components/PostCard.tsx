@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { format } from 'date-fns';
-import { zhCN } from 'date-fns/locale/zh-CN';
+import { zhCN } from 'date-fns/locale';
 
 interface PostCardProps {
   post: {
