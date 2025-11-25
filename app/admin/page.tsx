@@ -102,19 +102,19 @@ export default function AdminPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-text)] transition-colors duration-300">
         <Header />
         <div className="max-w-md mx-auto px-4 py-16">
-          <div className="bg-white shadow rounded-lg p-8">
-            <h1 className="text-2xl font-bold mb-4 text-center">管理后台登录</h1>
-            <p className="text-sm text-gray-500 mb-6 text-center">请输入访问密码</p>
+          <div className="bg-[var(--content-bg)] shadow rounded-lg p-8 border border-gray-200 dark:border-gray-700">
+            <h1 className="text-2xl font-bold mb-4 text-center text-[var(--page-text)]">管理后台登录</h1>
+            <p className="text-sm text-[var(--page-text)] opacity-70 mb-6 text-center">请输入访问密码</p>
             <form onSubmit={handleAuth} className="space-y-4">
               <input
                 type="password"
                 value={passwordInput}
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="输入密码"
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
                 required
               />
               {authError && <p className="text-sm text-red-500">{authError}</p>}
@@ -132,12 +132,12 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--page-bg)] text-[var(--page-text)] transition-colors duration-300">
       <Header />
       
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold">管理后台</h1>
+          <h1 className="text-3xl font-bold text-[var(--page-text)]">管理后台</h1>
           <button
             onClick={handleCreateNew}
             className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -147,59 +147,59 @@ export default function AdminPage() {
         </div>
 
         {showEditor ? (
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-[var(--content-bg)] rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
             <PostEditor post={editingPost} onSave={handleSave} onCancel={() => setShowEditor(false)} />
           </div>
         ) : (
           <>
-            <div className="bg-white rounded-lg shadow overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className="bg-[var(--content-bg)] rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-[var(--content-bg)] opacity-90">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--page-text)] opacity-70 uppercase tracking-wider">
                       标题
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--page-text)] opacity-70 uppercase tracking-wider">
                       分类
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--page-text)] opacity-70 uppercase tracking-wider">
                       作者
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--page-text)] opacity-70 uppercase tracking-wider">
                       创建时间
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-[var(--page-text)] opacity-70 uppercase tracking-wider">
                       操作
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-[var(--content-bg)] divide-y divide-gray-200 dark:divide-gray-700">
                   {posts.map((post) => (
                     <tr key={post.id}>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm font-medium text-gray-900">{post.title}</div>
+                        <div className="text-sm font-medium text-[var(--page-text)]">{post.title}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{post.category || '-'}</div>
+                        <div className="text-sm text-[var(--page-text)] opacity-70">{post.category || '-'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{post.author || 'John Doe'}</div>
+                        <div className="text-sm text-[var(--page-text)] opacity-70">{post.author || 'John Doe'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-[var(--page-text)] opacity-70">
                           {new Date(post.created_at).toLocaleDateString('zh-CN')}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
                           onClick={() => handleEdit(post)}
-                          className="text-blue-600 hover:text-blue-900 mr-4"
+                          className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
                         >
                           编辑
                         </button>
                         <button
                           onClick={() => handleDelete(post.id)}
-                          className="text-red-600 hover:text-red-900"
+                          className="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                         >
                           删除
                         </button>
@@ -210,12 +210,12 @@ export default function AdminPage() {
               </table>
             </div>
 
-            <div className="mt-8 bg-white rounded-lg shadow p-6">
-              <h2 className="text-xl font-bold mb-4">文件管理</h2>
+            <div className="mt-8 bg-[var(--content-bg)] rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-bold mb-4 text-[var(--page-text)]">文件管理</h2>
               <FileUploader />
             </div>
 
-            <div className="mt-8 bg-white rounded-lg shadow p-6">
+            <div className="mt-8 bg-[var(--content-bg)] rounded-lg shadow p-6 border border-gray-200 dark:border-gray-700">
               <CategoryManager />
             </div>
           </>

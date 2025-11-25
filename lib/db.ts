@@ -304,6 +304,21 @@ export const files = {
       throw fetchError;
     }
 
+    if (fileRecord) {
+      // 从 Supabase Storage 删除文件
+      const filePath = fileRecord.file_path;
+      // 如果 file_path 是完整的 URL，提取路径部分
+      const pathMatch = filePath.match(/uploads\/(.+)$/);
+      if (pathMatch) {
+        const storagePath = `uploads/${pathMatch[1]}`;
+        const { error: storageError } = await supabase.storage.from('files').remove([storagePath]);
+        if (storageError) {
+          console.error('删除存储文件失败:', storageError);
+          // 继续删除数据库记录，即使存储删除失败
+        }
+      }
+    }
+
     const { error } = await supabase.from('files').delete().eq('id', id);
     if (error) {
       console.error('删除文件记录失败:', error);

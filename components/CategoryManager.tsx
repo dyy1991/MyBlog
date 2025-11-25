@@ -82,14 +82,14 @@ export default function CategoryManager() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold mb-4">分类管理</h2>
+        <h2 className="text-xl font-bold mb-4 text-[var(--page-text)]">分类管理</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <input
             type="text"
             placeholder="分类名称 *"
             value={name}
             onChange={e => setName(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
             required
           />
           <input
@@ -97,14 +97,14 @@ export default function CategoryManager() {
             placeholder="Slug（可选，自动生成）"
             value={slug}
             onChange={e => setSlug(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
           />
           <input
             type="text"
             placeholder="描述（可选）"
             value={description}
             onChange={e => setDescription(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
           />
           <div className="md:col-span-3">
             <button
@@ -118,27 +118,27 @@ export default function CategoryManager() {
         </form>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded">
-        <div className="grid grid-cols-4 gap-4 px-4 py-2 text-sm font-medium text-gray-500 border-b">
+      <div className="bg-[var(--content-bg)] border border-gray-200 dark:border-gray-700 rounded">
+        <div className="grid grid-cols-4 gap-4 px-4 py-2 text-sm font-medium text-[var(--page-text)] opacity-70 border-b border-gray-200 dark:border-gray-700">
           <span>名称</span>
           <span>Slug</span>
           <span>描述</span>
           <span className="text-right">操作</span>
         </div>
         {loading ? (
-          <p className="p-4 text-center text-gray-500">加载中...</p>
+          <p className="p-4 text-center text-[var(--page-text)] opacity-70">加载中...</p>
         ) : categories.length === 0 ? (
-          <p className="p-4 text-center text-gray-500">暂无分类</p>
+          <p className="p-4 text-center text-[var(--page-text)] opacity-70">暂无分类</p>
         ) : (
           categories.map(category => (
-            <div key={category.id} className="grid grid-cols-4 gap-4 px-4 py-3 border-t text-sm items-center">
-              <span className="font-medium">{category.name}</span>
-              <span className="text-gray-500">{category.slug}</span>
-              <span className="text-gray-500 truncate">{category.description || '-'}</span>
+            <div key={category.id} className="grid grid-cols-4 gap-4 px-4 py-3 border-t border-gray-200 dark:border-gray-700 text-sm items-center">
+              <span className="text-[var(--page-text)] opacity-70">{category.name}</span>
+              <span className="text-[var(--page-text)] opacity-70">{category.slug}</span>
+              <span className="text-[var(--page-text)] opacity-70 truncate">{category.description || '-'}</span>
               <div className="text-right">
                 <button
                   onClick={() => handleDelete(category.id)}
-                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800"
+                  className="px-3 py-1 text-sm text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                 >
                   删除
                 </button>

@@ -210,12 +210,31 @@ OPENAI_API_KEY=可选，OpenAI key
 
 > Service Role Key 仅会在服务端使用，请勿泄露。部署到 Vercel 时，将上述变量配置到 Project Settings → Environment Variables 中。
 
+## Supabase Storage 设置
+
+文件上传功能使用 Supabase Storage，需要先设置：
+
+1. 在 Supabase Dashboard 中，进入 **Storage** 页面
+2. 点击 **Create a new bucket**
+3. 创建名为 `files` 的 bucket
+4. 设置权限：
+   - **Public bucket**: 勾选（允许公开访问）
+   - 或者设置 Policy 允许读取：
+     ```sql
+     -- 允许所有人读取
+     CREATE POLICY "Public Access" ON storage.objects FOR SELECT USING (bucket_id = 'files');
+     ```
+5. 如果需要上传权限，添加 Policy：
+   ```sql
+   -- 允许服务端上传（使用 Service Role Key）
+   CREATE POLICY "Service Role Upload" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'files');
+   ```
+
 ## 注意事项
 
-1. 上传的文件会保存在 `public/uploads` 目录
-2. 确保该目录有写入权限
-3. 生产环境建议使用更强大的数据库（如 PostgreSQL）
-4. 建议配置环境变量来保护敏感信息
+1. 上传的文件会保存在 Supabase Storage 的 `files` bucket 中
+2. 确保 Supabase Storage bucket 已正确配置权限
+3. 建议配置环境变量来保护敏感信息
 
 ## 开发
 

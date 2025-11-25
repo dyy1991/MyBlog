@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 type ThemeOption = 'dark' | 'light' | 'neon';
 
@@ -19,6 +19,10 @@ export default function Header() {
   const [searchQuery, setSearchQuery] = useState('');
   const [theme, setTheme] = useState<ThemeOption>('dark');
   const [categories, setCategories] = useState<Array<{ id: string; name: string; slug: string }>>([]);
+  
+  const categoriesRef = useRef<HTMLLIElement>(null);
+  const blogRef = useRef<HTMLLIElement>(null);
+  const stylesRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
     const storedTheme = typeof window !== 'undefined' ? (localStorage.getItem('philosophy-theme') as ThemeOption | null) : null;
@@ -39,6 +43,26 @@ export default function Header() {
     };
 
     fetchCategories();
+  }, []);
+
+  // 点击外部区域收起下拉菜单
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (categoriesRef.current && !categoriesRef.current.contains(event.target as Node)) {
+        setShowCategories(false);
+      }
+      if (blogRef.current && !blogRef.current.contains(event.target as Node)) {
+        setShowBlog(false);
+      }
+      if (stylesRef.current && !stylesRef.current.contains(event.target as Node)) {
+        setShowStyles(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const applyTheme = (nextTheme: ThemeOption) => {
@@ -125,7 +149,7 @@ export default function Header() {
                 Home
               </Link>
             </li>
-            <li className="relative">
+            <li className="relative" ref={categoriesRef}>
               <button
                 onClick={() => setShowCategories(!showCategories)}
                 className="flex items-center gap-1 hover:text-gray-400 transition"
@@ -145,6 +169,7 @@ export default function Header() {
                         key={category.id}
                         href={`/categories/${category.slug}`}
                         className="block px-4 py-2 hover:bg-[var(--header-border)] transition"
+                        onClick={() => setShowCategories(false)}
                       >
                         {category.name}
                       </Link>
@@ -153,7 +178,7 @@ export default function Header() {
                 </div>
               )}
             </li>
-            <li className="relative">
+            <li className="relative" ref={blogRef}>
               <button
                 onClick={() => setShowBlog(!showBlog)}
                 className="flex items-center gap-1 hover:text-gray-400 transition"
@@ -164,13 +189,13 @@ export default function Header() {
                 </svg>
               </button>
               {showBlog && (
-                <div className="absolute top-full left-0 mt-2 bg-gray-800 rounded shadow-lg py-2 min-w-[150px] z-10">
-                  <Link href="/blog" className="block px-4 py-2 hover:bg-gray-700">All Posts</Link>
-                  <Link href="/admin" className="block px-4 py-2 hover:bg-gray-700">Admin</Link>
+                <div className="absolute top-full left-0 mt-2 bg-[var(--header-bg)] rounded shadow-lg py-2 min-w-[150px] z-10 border border-[var(--header-border)]">
+                  <Link href="/blog" className="block px-4 py-2 hover:bg-[var(--header-border)] transition" onClick={() => setShowBlog(false)}>All Posts</Link>
+                  <Link href="/admin" className="block px-4 py-2 hover:bg-[var(--header-border)] transition" onClick={() => setShowBlog(false)}>Admin</Link>
                 </div>
               )}
             </li>
-            <li className="relative">
+            <li className="relative" ref={stylesRef}>
               <button
                 onClick={() => setShowStyles(!showStyles)}
                 className="flex items-center gap-1 hover:text-gray-400 transition"

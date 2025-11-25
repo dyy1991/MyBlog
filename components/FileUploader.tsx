@@ -112,7 +112,7 @@ export default function FileUploader() {
             accept=".md,.markdown,.mp4,.mov,.avi,.jpg,.jpeg,.png,.gif"
           />
         </label>
-        <p className="text-sm text-gray-500 mt-2">
+        <p className="text-sm text-[var(--page-text)] opacity-70 mt-2">
           支持的文件类型：Markdown (.md), 视频 (.mp4, .mov, .avi), 图片 (.jpg, .png, .gif)
         </p>
       </div>
@@ -121,7 +121,7 @@ export default function FileUploader() {
         {files.map((file) => (
           <div
             key={file.id}
-            className="border border-gray-200 rounded p-4 hover:shadow-lg transition"
+            className="border border-gray-200 dark:border-gray-700 rounded p-4 hover:shadow-lg transition bg-[var(--content-bg)]"
           >
             {isImage(file.file_type) && (
               <div className="relative w-full h-32 mb-2">
@@ -133,22 +133,22 @@ export default function FileUploader() {
               </div>
             )}
             {isVideo(file.file_type) && (
-              <div className="w-full h-32 mb-2 bg-gray-100 rounded flex items-center justify-center">
-                <svg className="w-12 h-12 text-gray-400" fill="currentColor" viewBox="0 0 24 24">
+              <div className="w-full h-32 mb-2 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center">
+                <svg className="w-12 h-12 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M8 5v14l11-7z"/>
                 </svg>
               </div>
             )}
             {isMarkdown(file.original_name) && (
-              <div className="w-full h-32 mb-2 bg-gray-100 rounded flex items-center justify-center">
+              <div className="w-full h-32 mb-2 bg-gray-100 dark:bg-gray-800 rounded flex items-center justify-center">
                 <span className="text-4xl">📝</span>
               </div>
             )}
             <div className="space-y-1">
-              <p className="text-sm font-medium truncate" title={file.original_name}>
+              <p className="text-sm font-medium truncate text-[var(--page-text)]" title={file.original_name}>
                 {file.original_name}
               </p>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-[var(--page-text)] opacity-70">
                 {formatFileSize(file.file_size)} • {new Date(file.uploaded_at).toLocaleDateString('zh-CN')}
               </p>
               <div className="flex gap-2 mt-2">
@@ -156,13 +156,13 @@ export default function FileUploader() {
                   href={file.file_path}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-xs text-blue-600 hover:underline"
+                  className="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:underline"
                 >
                   查看
                 </a>
                 <button
                   onClick={() => handleDelete(file.id)}
-                  className="text-xs text-red-600 hover:underline"
+                  className="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:underline"
                 >
                   删除
                 </button>
@@ -173,7 +173,7 @@ export default function FileUploader() {
       </div>
 
       {files.length === 0 && (
-        <p className="text-center text-gray-500 py-8">暂无文件</p>
+        <p className="text-center text-[var(--page-text)] opacity-70 py-8">暂无文件</p>
       )}
     </div>
   );

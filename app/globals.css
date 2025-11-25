@@ -39,8 +39,8 @@ body.theme-dark {
   --header-border: #2a2a2a;
   --hero-bg: #111111;
   --hero-text: #f5f5f5;
-  --content-bg: #ffffff;
-  --content-text: #111111;
+  --content-bg: #1a1a1a;
+  --content-text: #f5f5f5;
 }
 
 body.theme-light {
@@ -83,5 +83,36 @@ body.theme-neon {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #777;
+}
+
+/* 编辑框主题适配 */
+input, textarea, select {
+  background-color: var(--input-bg, #ffffff);
+  color: var(--input-text, #0f0f0f);
+  border-color: var(--input-border, #d1d5db);
+}
+
+body.theme-dark input,
+body.theme-dark textarea,
+body.theme-dark select {
+  --input-bg: #1a1a1a;
+  --input-text: #f5f5f5;
+  --input-border: #404040;
+}
+
+body.theme-neon input,
+body.theme-neon textarea,
+body.theme-neon select {
+  --input-bg: #0b1020;
+  --input-text: #e0f2ff;
+  --input-border: #1e3a5f;
+}
+
+body.theme-light input,
+body.theme-light textarea,
+body.theme-light select {
+  --input-bg: #ffffff;
+  --input-text: #0f0f0f;
+  --input-border: #d1d5db;
 }
 

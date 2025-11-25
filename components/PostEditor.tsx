@@ -165,7 +165,7 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
               placeholder="输入文章标题"
             />
           </div>
@@ -176,7 +176,7 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
               >
                 <option value="">{loadingCategories ? '加载中...' : '选择分类'}</option>
                 {categoryOptions.map(option => (
@@ -192,7 +192,7 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
                 type="text"
                 value={author}
                 onChange={(e) => setAuthor(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
               />
             </div>
           </div>
@@ -203,7 +203,7 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
               value={excerpt}
               onChange={(e) => setExcerpt(e.target.value)}
               rows={2}
-              className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
               placeholder="文章摘要（可选）"
             />
           </div>
@@ -241,7 +241,7 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={20}
-              className="w-full px-4 py-2 border border-gray-300 rounded font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border rounded font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-[var(--input-bg)] text-[var(--input-text)] border-[var(--input-border)]"
               placeholder="输入文章内容，支持 Markdown 格式..."
             />
           </div>
