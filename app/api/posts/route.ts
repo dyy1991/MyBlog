@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { posts } from '@/lib/db';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const allPosts = await posts.getAll();
+    // 检查是否有 admin 参数，如果有则返回所有文章（包括未发布的）
+    const { searchParams } = new URL(request.url);
+    const isAdmin = searchParams.get('admin') === 'true';
+    
+    const allPosts = isAdmin ? await posts.getAllForAdmin() : await posts.getAll();
     return NextResponse.json(allPosts);
   } catch (error) {
     return NextResponse.json({ error: '获取文章失败' }, { status: 500 });

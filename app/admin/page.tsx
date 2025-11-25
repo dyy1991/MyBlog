@@ -43,7 +43,7 @@ export default function AdminPage() {
 
   const loadPosts = async () => {
     try {
-      const response = await fetch('/api/posts');
+      const response = await fetch('/api/posts?admin=true');
       const data = await response.json();
       setPosts(data);
     } catch (error) {
@@ -183,7 +183,7 @@ export default function AdminPage() {
                         <div className="text-sm text-[var(--page-text)] opacity-70">{post.category || '-'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-[var(--page-text)] opacity-70">{post.author || 'John Doe'}</div>
+                        <div className="text-sm text-[var(--page-text)] opacity-70">{post.author || 'Oceanus Quest'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-[var(--page-text)] opacity-70">

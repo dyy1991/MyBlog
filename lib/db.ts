@@ -97,10 +97,33 @@ async function ensureUniqueSlug(slug: string) {
 export const posts = {
   async getAll(): Promise<Post[]> {
     const supabase = getSupabase();
+    // 获取所有已发布的文章（is_published != false，包括 true 和 null）
+    // 先获取所有文章，然后过滤掉 is_published = false 的
     const { data, error } = await supabase
       .from('posts')
       .select('*')
-      .eq('is_published', true)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('获取文章列表失败:', error);
+      throw error;
+    }
+
+    // 过滤掉未发布的文章（is_published === false）
+    // 保留 is_published === true 或 is_published === null/undefined 的文章
+    const publishedPosts = (data ?? []).filter(
+      (post) => post.is_published !== false
+    );
+
+    return publishedPosts;
+  },
+
+  async getAllForAdmin(): Promise<Post[]> {
+    const supabase = getSupabase();
+    // 获取所有文章（包括未发布的），供管理后台使用
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -121,6 +144,28 @@ export const posts = {
     }
 
     return data ?? null;
+  },
+
+  async getByCategory(categoryName: string): Promise<Post[]> {
+    const supabase = getSupabase();
+    // 获取指定分类的所有已发布文章
+    const { data, error } = await supabase
+      .from('posts')
+      .select('*')
+      .eq('category', categoryName)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('获取分类文章失败:', error);
+      throw error;
+    }
+
+    // 过滤掉未发布的文章（is_published === false）
+    const publishedPosts = (data ?? []).filter(
+      (post) => post.is_published !== false
+    );
+
+    return publishedPosts;
   },
 
   async create(data: {
@@ -377,6 +422,22 @@ export const categories = {
     }
 
     return data ?? [];
+  },
+
+  async getBySlug(slug: string): Promise<Maybe<Category>> {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('categories')
+      .select('*')
+      .eq('slug', slug)
+      .maybeSingle();
+
+    if (error) {
+      console.error('获取分类失败:', error);
+      throw error;
+    }
+
+    return data ?? null;
   },
 
   async create(data: { name: string; slug?: string; description?: string }): Promise<string> {
