@@ -160,24 +160,46 @@ export const posts = {
   async getByCategory(categoryName: string): Promise<Post[]> {
     const supabase = getSupabase();
     // 获取指定分类的所有已发布文章
-    const { data, error } = await supabase
+    // 注意：Supabase 的 .eq() 是大小写敏感的
+    // 先获取所有文章，然后在代码中进行大小写不敏感的匹配
+    const { data, error, count } = await supabase
       .from('posts')
-      .select('*')
-      .eq('category', categoryName)
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('获取分类文章失败:', error);
+      console.error('错误详情:', JSON.stringify(error, null, 2));
       throw error;
     }
 
-    // 在代码中过滤掉未发布的文章（is_published === false）
-    // 保留 is_published === true 或 is_published === null/undefined 的文章
-    const publishedPosts = (data ?? []).filter(
-      (post) => post.is_published !== false
-    );
+    // 调试信息：检查查询结果
+    console.log(`[getByCategory] 分类名称: "${categoryName}"`);
+    console.log(`[getByCategory] 查询到的所有文章总数: ${data?.length ?? 0}, 数据库计数: ${count ?? 'N/A'}`);
+    
+    // 在代码中进行大小写不敏感的匹配，并过滤掉未发布的文章
+    const categoryPosts = (data ?? []).filter((post) => {
+      // 大小写不敏感匹配分类名称
+      const categoryMatch = post.category && 
+        post.category.toLowerCase().trim() === categoryName.toLowerCase().trim();
+      // 过滤掉未发布的文章
+      const isPublished = post.is_published !== false;
+      
+      return categoryMatch && isPublished;
+    });
 
-    return publishedPosts;
+    // 调试信息：显示匹配结果
+    if (data) {
+      console.log(`[getByCategory] 所有文章的分类信息:`);
+      data.forEach((post, index) => {
+        const matches = post.category && 
+          post.category.toLowerCase().trim() === categoryName.toLowerCase().trim();
+        console.log(`[getByCategory] 文章 ${index + 1}: id=${post.id}, title=${post.title?.substring(0, 20)}, category="${post.category}", is_published=${post.is_published}, 匹配=${matches}`);
+      });
+    }
+
+    console.log(`[getByCategory] 过滤后的分类文章数: ${categoryPosts.length}`);
+    return categoryPosts;
   },
 
   async create(data: {
