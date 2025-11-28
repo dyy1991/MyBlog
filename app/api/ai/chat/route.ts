@@ -25,18 +25,27 @@ export async function POST(request: NextRequest) {
       ? `基于以下文章内容回答问题：\n\n${context}\n\n问题：${question}\n\n请用中文回答，回答要简洁明了。`
       : `请用中文回答以下问题，回答要简洁明了：\n\n${question}`;
 
-    // 调用 OpenAI API（需要设置环境变量 OPENAI_API_KEY）
-    // 如果没有配置 OpenAI，返回模拟回答
-    const openaiApiKey = process.env.OPENAI_API_KEY;
+    // 调用 Cursor API（需要设置环境变量 CURSOR_API_KEY）
+    // 如果没有配置 Cursor API Key，返回模拟回答
+    const cursorApiKey = process.env.CURSOR_API_KEY;
 
     let answer = '';
 
-    if (openaiApiKey) {
+    if (cursorApiKey) {
       try {
-        const openai = new OpenAI({ apiKey: openaiApiKey });
+        // Cursor 使用 OpenAI 兼容的 API
+        // 如果 Cursor 提供了自定义 API 端点，可以通过环境变量配置
+        const cursorApiBaseUrl = process.env.CURSOR_API_BASE_URL || 'https://api.openai.com/v1';
+        const openai = new OpenAI({ 
+          apiKey: cursorApiKey,
+          baseURL: cursorApiBaseUrl
+        });
 
+        // 使用 auto 模式，让系统自动选择最佳模型
+        // 如果 API 不支持 'auto'，可以回退到 'gpt-3.5-turbo' 或通过环境变量配置
+        const model = process.env.CURSOR_MODEL || 'auto';
         const completion = await openai.chat.completions.create({
-          model: 'gpt-3.5-turbo',
+          model: model, // 使用 auto 模式
           messages: [
             {
               role: 'system',
@@ -53,12 +62,12 @@ export async function POST(request: NextRequest) {
 
         answer = completion.choices[0]?.message?.content || '抱歉，我无法回答这个问题。';
       } catch (openaiError) {
-        console.error('OpenAI API 错误:', openaiError);
+        console.error('Cursor API 错误:', openaiError);
         answer = 'AI 服务暂时不可用，请稍后再试。';
       }
     } else {
       // 模拟回答（用于演示）
-      answer = `感谢你的问题："${question}"。这是一个很好的问题！由于未配置 OpenAI API Key，这里显示的是模拟回答。要启用真实的 AI 功能，请在环境变量中设置 OPENAI_API_KEY。`;
+      answer = `感谢你的问题："${question}"。这是一个很好的问题！由于未配置 Cursor API Key，这里显示的是模拟回答。要启用真实的 AI 功能，请在环境变量中设置 CURSOR_API_KEY。`;
     }
 
     // 保存对话历史

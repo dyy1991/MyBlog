@@ -98,23 +98,34 @@ export const posts = {
   async getAll(): Promise<Post[]> {
     const supabase = getSupabase();
     // 获取所有已发布的文章（is_published != false，包括 true 和 null）
-    // 先获取所有文章，然后过滤掉 is_published = false 的
-    const { data, error } = await supabase
+    // 不按分类过滤，获取所有文章
+    // 注意：如果使用 ANON_KEY，可能受到 RLS 策略限制
+    const { data, error, count } = await supabase
       .from('posts')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('created_at', { ascending: false });
 
     if (error) {
       console.error('获取文章列表失败:', error);
+      console.error('错误详情:', JSON.stringify(error, null, 2));
       throw error;
     }
 
-    // 过滤掉未发布的文章（is_published === false）
+    // 调试信息：检查查询结果
+    console.log(`[getAll] 查询到的文章总数: ${data?.length ?? 0}, 数据库计数: ${count ?? 'N/A'}`);
+    if (data) {
+      data.forEach((post, index) => {
+        console.log(`[getAll] 文章 ${index + 1}: id=${post.id}, title=${post.title?.substring(0, 20)}, is_published=${post.is_published}, category=${post.category}`);
+      });
+    }
+
+    // 在代码中过滤掉未发布的文章（is_published === false）
     // 保留 is_published === true 或 is_published === null/undefined 的文章
     const publishedPosts = (data ?? []).filter(
       (post) => post.is_published !== false
     );
 
+    console.log(`[getAll] 过滤后的已发布文章数: ${publishedPosts.length}`);
     return publishedPosts;
   },
 
@@ -160,7 +171,8 @@ export const posts = {
       throw error;
     }
 
-    // 过滤掉未发布的文章（is_published === false）
+    // 在代码中过滤掉未发布的文章（is_published === false）
+    // 保留 is_published === true 或 is_published === null/undefined 的文章
     const publishedPosts = (data ?? []).filter(
       (post) => post.is_published !== false
     );

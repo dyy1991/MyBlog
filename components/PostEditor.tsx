@@ -24,7 +24,7 @@ export default function PostEditor({ post, onSave, onCancel }: PostEditorProps) 
   const [content, setContent] = useState('');
   const [excerpt, setExcerpt] = useState('');
   const [category, setCategory] = useState('');
-  const [author, setAuthor] = useState('John Doe');
+  const [author, setAuthor] = useState('Oceanus Quest');
   const [featuredImage, setFeaturedImage] = useState('');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
